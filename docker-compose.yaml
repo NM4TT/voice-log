@@ -1,0 +1,32 @@
+services:
+  voice-log:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: voice-log-prod
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    security_opt:
+      - no-new-privileges:true
+
+  # ── CLOUDFLARE QUICK TUNNELS (FOR MOBILE TESTING / PROD) ────────────────
+  cloudflared:
+    image: docker.io/cloudflare/cloudflared:latest
+    container_name: voice-log-tunnel-prod
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    env_file:
+      - .env
+    depends_on:
+      - voice-log
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 128M
+        reservations:
+          cpus: '0.05'
+          memory: 32M
